@@ -200,6 +200,8 @@ namespace Castle.Facilities.AutoTx
 			if (_Logger.IsDebugEnabled)
 				_Logger.DebugFormat("fork case invocation {0} tx#{1}", invocation, txData.Transaction.LocalIdentifier);
 
+			var clonedInvocation = invocation.ShallowCopy();
+
 			return Task.Factory.StartNew(t =>
 			{
 				var hasException = false;
@@ -220,6 +222,8 @@ namespace Castle.Facilities.AutoTx
 								_Logger.DebugFormat("calling complete on TransactionScope for tx#{0}", tuple.Item3);
 							ts.Complete();
 						}
+						if (_Logger.IsDebugEnabled)
+							_Logger.DebugFormat("calling complete on TransactionScope for tx#{0} completed", tuple.Item3);
 					}
 					catch (TransactionAbortedException ex)
 					{
@@ -257,7 +261,7 @@ namespace Castle.Facilities.AutoTx
 						// See footnote at end of file
 					}
 				}
-			}, Tuple.Create(invocation, txData, txData.Transaction.LocalIdentifier));
+			}, Tuple.Create(clonedInvocation, txData, txData.Transaction.LocalIdentifier));
 		}
 
 		void IOnBehalfAware.SetInterceptedComponentModel(ComponentModel target)
